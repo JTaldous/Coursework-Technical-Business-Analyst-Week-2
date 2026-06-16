@@ -1,0 +1,301 @@
+graph TD
+    TRIGGER(["🚀 CUSTOMER ACTION:<br/>Accesses Smart-Recovery Portal"])
+    
+    TRIGGER --> MFA["🔐 STEP 1: Identity Verification<br/>Multi-Factor Authentication<br/>SYSTEM: Portal MFA Engine"]
+    
+    MFA --> MFA_RESULT{MFA<br/>Success?}
+    
+    MFA_RESULT -->|Yes| DASHBOARD["✅ STEP 2: Account Dashboard Loaded<br/>OPP-01: AUTOMATED STATUS CHECK<br/>Displays: Current Balance, Status,<br/>Recent Activity, Next Action<br/>SYSTEM: API → Legacy Database"]
+    
+    MFA_RESULT -->|No| MFA_FAIL_COUNT{Failures<br/>Count?}
+    
+    MFA_FAIL_COUNT -->|Attempt<br/>1-2 of 3| MFA_RETRY["🔄 STORY IDV-02:<br/>Retry MFA Login<br/>Attempt X of 3<br/>SYSTEM: Portal MFA Engine"]
+    MFA_RETRY --> MFA
+    
+    MFA_FAIL_COUNT -->|Attempt<br/>3 - Locked| ESCALATE_MFA["⚠️ EXCEPTION: Account Locked<br/>STORY IDV-03: Real-Time Lockout Email Alert<br/>3x MFA Failure → Immediate Email<br/>OPP-04: Real-time notification to<br/>collections_alerts@bank.com<br/>With: Account_ID, Timestamp, Reason<br/>SYSTEM: Portal Security Engine → Email"]
+    
+    ESCALATE_MFA --> MFA_FOLLOWUP["👤 Agent Follow-up<br/>Manual Identity Verification<br/>SYSTEM: Phone / Postal Verification"]
+    
+    MFA_FOLLOWUP --> MFA_VERIFIED{Verified?}
+    MFA_VERIFIED -->|Yes| DASHBOARD
+    MFA_VERIFIED -->|No| CASE_CLOSED_FAILED(["❌ CASE CLOSED:<br/>Verification Failed<br/>Account Flagged for<br/>Fraud Review"])
+    
+    DASHBOARD --> DASHBOARD_BENEFIT["💡 BENEFIT:<br/>Reduced Admin Effort<br/>Customers self-serve status<br/>checks; eliminates manual<br/>agent status queries"]
+    
+    DASHBOARD_BENEFIT --> CUSTOMER_CHOICE{"CUSTOMER<br/>ACTION?"}
+    
+    subgraph SELF_SERVICE ["🟢 SELF-SERVICE PATH"]
+        direction TB
+        
+        SS_VIEW["👁️ View Account Details<br/>(ZERO Agent Effort)<br/>OPP-01: Automated Status Check<br/>Reduces Agent Status Queries<br/>SYSTEM: Portal Dashboard"]
+        
+        SS_PTP["💰 Set Up Promise-to-Pay<br/>OPP-05: Self-Service Setup<br/>Reduces Agent Intake Calls"]
+        
+        SS_INCOME_CHECK["🔍 STORY ROUT-01:<br/>Affordability Pre-Gate Check<br/>Validate Customer Monthly<br/>Income Profile Before Confirm<br/>SYSTEM: Portal Validation Engine"]
+        
+        SS_TIMEOUT["⚠️ EXCEPTION: Session Timeout<br/>Customer Abandonment<br/>No Action Taken<br/>SYSTEM: Portal Session Expire"]
+        
+        SS_PLAN_CHECK["⚙️ STEP 3: Automated<br/>Affordability Check<br/>Income vs. Proposed Plan<br/>SYSTEM: Validation Engine"]
+        
+        SS_PLAN_PASS["✅ Plan Affordable<br/>STEP 4: Auto-Confirmation<br/>Payment Terms Generated &<br/>Stored in System<br/>SYSTEM: Portal Database<br/>+ CSV Export to Legacy DB"]
+        
+        SS_PLAN_PASS_BENEFIT["💡 BENEFIT:<br/>Reduced Admin Effort<br/>+ Faster Next Action<br/>No manual data entry;<br/>instant confirmation sent"]
+        
+        SS_PLAN_FAIL["⚠️ EXCEPTION: Ineligible for Self-Service<br/>Plan Unaffordable OR<br/>Vulnerability Detected OR<br/>Existing Arrangement Conflict<br/>SYSTEM: Portal Validation"]
+        
+        SS_PLAN_FAIL_ESCALATE["Escalate to Gareth's Team<br/>with Flag"]
+        
+        SS_VIEW --> SS_END_VIEW(["✅ Case Closed<br/>Customer Satisfied"])
+        SS_VIEW --> SS_TIMEOUT
+        
+        SS_PTP --> SS_INCOME_CHECK
+        SS_INCOME_CHECK --> SS_PLAN_CHECK
+        SS_PLAN_CHECK --> SS_PLAN_PASS
+        SS_PLAN_CHECK --> SS_PLAN_FAIL
+        SS_PLAN_PASS --> SS_PLAN_PASS_BENEFIT
+        SS_PLAN_PASS_BENEFIT --> SS_CONSENT["📋 STORY P2P-03:<br/>Terms & Electronic Consent<br/>Customer reviews & accepts<br/>payment terms legally<br/>SYSTEM: Portal E-Signature"]
+        
+        SS_CONSENT --> SS_END_PTP(["✅ Promise-to-Pay<br/>Stored & Scheduled"])
+        SS_PLAN_FAIL --> SS_PLAN_FAIL_ESCALATE
+        SS_PLAN_FAIL_ESCALATE --> ESC_ASSIGN
+    end
+    
+    subgraph ESCALATION ["🟠 ESCALATION PATH"]
+        direction TB
+        
+        ESC_REASON["Reasons for Escalation:<br/>• MFA locked account<br/>• Unaffordable plan<br/>• Vulnerable customer flagged<br/>• Complex case"]
+        
+        ESC_ASSIGN["STEP 6: Agent Assignment<br/>Case Routed to Gareth's Team<br/>SYSTEM: Portal → Agent Queue"]
+        
+        ESC_CONTEXT["💡 BENEFIT:<br/>Context Preserved<br/>Agent sees full customer<br/>history, previous attempts,<br/>flags in one dashboard"]
+        
+        ESC_AGENT["👤 Agent Reviews Portal Case<br/>+ Pre-filled Context<br/>Minimal manual data entry<br/>SYSTEM: Agent Dashboard"]
+        
+        ESC_RESOLUTION["💬 Agent Reaches Out<br/>Phone / Email / SMS<br/>SYSTEM: Communication Channel"]
+        
+        ESC_OUTCOME{"Agent<br/>Outcome"}
+        
+        ESC_PTP["Promise-to-Pay<br/>Set Up by Agent"]
+        ESC_DEFER["Case Deferred:<br/>Customer Unavailable"]
+        ESC_FLAG["Vulnerability Noted:<br/>Customer Flagged"]
+        ESC_HARDSHIP["⚠️ STORY ROUT-02:<br/>Context-Rich Vulnerability Escalation<br/>Metadata Routing with Reason Codes<br/>• HARDSHIP_ABSOLUTE<br/>• AFFORDABILITY_FAILED<br/>• VULNERABILITY_FLAGGED<br/>FCA-Compliant Escalation<br/>to Specialist Team"]
+        
+        ESC_REASON --> ESC_ASSIGN
+        ESC_ASSIGN --> ESC_CONTEXT
+        ESC_CONTEXT --> ESC_AGENT
+        ESC_AGENT --> ESC_RESOLUTION
+        ESC_RESOLUTION --> ESC_OUTCOME
+        
+        ESC_OUTCOME -->|PTP Agreed| ESC_PTP
+        ESC_OUTCOME -->|Unavailable| ESC_DEFER
+        ESC_OUTCOME -->|Vulnerable| ESC_FLAG
+        ESC_OUTCOME -->|Hardship| ESC_HARDSHIP
+        
+        ESC_PTP --> ESC_END(["✅ Escalation<br/>Resolved"])
+        ESC_DEFER --> ESC_END
+        ESC_FLAG --> ESC_END
+        ESC_HARDSHIP --> ESC_END
+    end
+    
+    CUSTOMER_CHOICE -->|View Status| SS_VIEW
+    CUSTOMER_CHOICE -->|View History| VIS_02["📋 STORY VIS-02:<br/>Payment History Ledger<br/>Last 12 months transactions<br/>Success / Pending / Missed<br/>SYSTEM: Portal Database"]
+    CUSTOMER_CHOICE -->|Set Up PTP| SS_PTP
+    CUSTOMER_CHOICE -->|Need Help| ESC_ASSIGN
+    
+    VIS_02 --> VIS_02_END(["✅ Customer Educated<br/>Verified Account Status"])
+    
+    SS_TIMEOUT --> ABANDON_TIMEOUT(["⚠️ ABANDONED CASE:<br/>No Portal Progress<br/>SYSTEM: Queued for<br/>Proactive Outreach"])
+    
+    SS_END_PTP --> AUTO_WORKFLOW["🔄 OPP-05: AUTOMATED WORKFLOW<br/>Promise-to-Pay Stored"]
+    ESC_END --> AUTO_WORKFLOW
+    
+    AUTO_WORKFLOW --> AUTO_SCHEDULE["📅 STEP 7: Follow-up Scheduled<br/>OPP-05: Automation<br/>System Sets Due Date & Alert<br/>SYSTEM: Workflow Engine"]
+    
+    AUTO_SCHEDULE --> SCHEDULE_BENEFIT["💡 BENEFIT:<br/>Improved Follow-up Consistency<br/>Zero reliance on agent memory;<br/>automatic alerts; no cases slip<br/>through gaps between updates"]
+    
+    SCHEDULE_BENEFIT --> WAIT_PAYMENT["⏳ Waiting for Payment<br/>No Manual Follow-up Needed<br/>SYSTEM: Monitoring Payment Date"]
+    
+    WAIT_PAYMENT --> PAYMENT_CHECK{"Payment<br/>Received?"}
+    
+    subgraph PAYMENT_HANDLING ["🟡 PAYMENT MONITORING"]
+        direction TB
+        
+        PAY_YES["✅ Payment Received<br/>On or Before Due Date<br/>SYSTEM: Auto-Applied to Account"]
+        
+        PAY_BALANCE{"Full Balance<br/>Cleared?"}
+        
+        PAY_YES_FULL["✅ CASE CLOSED<br/>Full Recovery<br/>SYSTEM: Archive"]
+        
+        PAY_YES_PARTIAL["🔄 Ongoing Recovery<br/>Hand-off to<br/>Collections Strategy<br/>SYSTEM: Process Exit"]
+        
+        PAY_MISSED["❌ Payment Missed<br/>Due Date Passed<br/>OPP-05: Auto-Alert Triggered<br/>SYSTEM: Alert Engine"]
+        
+        MISSED_BENEFIT["💡 BENEFIT:<br/>Faster Next Action<br/>Instant alert prevents days<br/>of delay; agent acts same<br/>day vs. manual discovery"]
+        
+        PAY_MISSED_AGENT["📢 STEP 8: Agent Alert<br/>Follow-up Required<br/>SYSTEM: Agent Notification<br/>with Case Context<br/>OPP-05 Realised: 1,122.40 hrs saved"]
+        
+        PAY_MISSED_CUST["📧 STEP 9: Customer Alert<br/>Courtesy Reminder<br/>Portal Notification + Email/SMS<br/>SYSTEM: Customer Channel"]
+        
+        PAY_MISSED_AGENT --> AGENT_FOLLOWUP["👤 Agent Follow-up<br/>Phone / Email<br/>SYSTEM: Communication Channel"]
+        
+        PAY_YES --> PAY_BALANCE
+        PAY_BALANCE -->|Yes| PAY_YES_FULL
+        PAY_BALANCE -->|No| PAY_YES_PARTIAL
+        
+        PAYMENT_CHECK -->|Yes| PAY_YES
+        PAYMENT_CHECK -->|No| PAY_MISSED
+        
+        PAY_MISSED --> MISSED_BENEFIT
+        MISSED_BENEFIT --> PAY_MISSED_AGENT
+        PAY_MISSED --> PAY_MISSED_CUST
+        
+        PAY_MISSED_CUST --> AGENT_FOLLOWUP
+        
+        AGENT_FOLLOWUP --> AGENT_RESOLUTION{"Agent<br/>Outcome"}
+        
+        AGENT_RESOLUTION -->|Payment<br/>Rescheduled| AUTO_SCHEDULE
+        AGENT_RESOLUTION -->|Hardship<br/>Noted| ESC_FLAG
+        AGENT_RESOLUTION -->|No<br/>Contact| ESCALATE_SPECIALIST["Escalate to<br/>Specialist Team"]
+        AGENT_RESOLUTION -->|Repeat<br/>Non-Payment| ESCALATE_COLLECTIONS["⚠️ EXCEPTION: Repeat Defaulter<br/>Customer Abandonment<br/>Escalate to Collections<br/>Strategy Team"]
+    end
+    
+    ESCALATE_COLLECTIONS --> COLLECTIONS_END(["🔄 Collections<br/>Specialist Handling"])
+    COLLECTIONS_END --> REPORTING_TRIGGER["Data Exported for Analysis"]
+    
+    ESCALATE_SPECIALIST --> SPECIALIST_END(["🔄 Specialist<br/>Handling"])
+    SPECIALIST_END --> REPORTING_TRIGGER
+    
+    PAY_YES_FULL --> REPORTING_TRIGGER
+    PAY_YES_PARTIAL --> REPORTING_TRIGGER
+    CASE_CLOSED_FAILED --> REPORTING_TRIGGER
+    ABANDON_TIMEOUT --> REPORTING_TRIGGER
+    
+    subgraph DORMANT_MONITOR ["⏰ DORMANT CASE MONITOR (Background - Continuous Scan)"]
+        direction TB
+        
+        MON_TRIGGER["🔍 CONTINUOUS SCAN<br/>Background Job Runs Every 4 Hours<br/>Checks All Active Portal Cases<br/>SYSTEM: Portal Monitoring Agent"]
+        
+        MON_CHECK{"Any Cases<br/>Stuck > 48h<br/>with NO Progress?"}
+        
+        MON_STUCK_TYPES["🚨 STORY ROUT-04 DETECTION:<br/>Cases Idle > 48 Hours:<br/>• Started PTP → Stuck in Income Check<br/>• Stopped at Plan Confirmation<br/>• Abandoned mid-escalation queue"]
+        
+        MON_EXTRACT["📋 STORY ROUT-04:<br/>Mark Abandoned Sessions<br/>Status: 'Incomplete Digital Arrangement - Abandoned'<br/>Extract full case context + alert tag<br/>SYSTEM: Portal Database Query"]
+        
+        MON_QUEUE["⬆️ STUCK CASE QUEUE<br/>Priority Escalation<br/>Push to Agent Inbox<br/>with Full Context<br/>SYSTEM: Agent Queue Manager"]
+        
+        MON_NO_ACTION["✅ All Cases<br/>Healthy<br/>Continue Monitoring"]
+        
+        MON_TRIGGER --> MON_CHECK
+        MON_CHECK -->|Yes| MON_STUCK_TYPES
+        MON_CHECK -->|No| MON_NO_ACTION
+        MON_STUCK_TYPES --> MON_EXTRACT
+        MON_EXTRACT --> MON_QUEUE
+        MON_NO_ACTION --> MON_TRIGGER
+        
+        MON_QUEUE --> STUCK_CONTEXT["💡 BENEFIT:<br/>Proactive Rescue<br/>Cases don't sit in limbo;<br/>agent reaches out within<br/>24h of detection;<br/>reduces abandonment rate"]
+    end
+    
+    MON_QUEUE --> STUCK_ESCALATE["⏬ Stuck Case Escalation<br/>Route to Gareth's Team<br/>SYSTEM: Portal → Agent Queue"]
+    STUCK_ESCALATE --> ESC_ASSIGN
+    
+    STUCK_CONTEXT --> STUCK_ESCALATE
+    
+    REPORTING_TRIGGER --> REP_01["📝 STORY REP-01:<br/>Portal Activity Audit Log<br/>Immutable log of all actions:<br/>Account ID, Action, IP, Timestamp<br/>SYSTEM: Secure Audit Logger"]
+    
+    REP_01 --> REP_02["📤 STORY REP-02:<br/>Midnight SFTP Batch Export<br/>Daily encrypted CSV transfer<br/>to legacy database (safe)<br/>SYSTEM: Secure SFTP Handler"]
+    
+    REP_02 --> REP_04["📋 STORY REP-04:<br/>Abandoned Session Tag Sync<br/>Bundle 'Digital Drop-off' flags<br/>into agent morning workspace<br/>Status: 'Escalate to Agent'<br/>SYSTEM: Batch CSV + Agent Queue"]
+    
+    REP_04 --> BATCH_TIMING["⏰ DAILY BATCH EXPORT<br/>Midnight: Portal → Legacy Database<br/>(Fresh data every morning)"]
+    
+    BATCH_TIMING --> AUTO_REPORTING["📊 OPP-03: AUTOMATED REPORTING<br/>STORY REP-03: DAILY TEAM LEAD DASHBOARD<br/>🔄 UPDATED BY 8:00 AM EACH MORNING<br/>24-Hour Summary (Previous Day):<br/>✅ Successful Payment Plans Logged<br/>❌ Failed Affordability Escalations<br/>🚨 SILENT ABANDONMENTS (New)<br/>📊 Case Flow Rate & Completion %<br/>SYSTEM: Portal Database + Analytics"]
+    
+    AUTO_REPORTING --> REPORTING_BENEFIT["💡 BENEFIT:<br/>DAILY TEAM LEAD VISIBILITY<br/>Fresh data every morning<br/>Catch problems same-day<br/>Silent Abandonments trigger<br/>immediate proactive outreach<br/>Real-time operational health check"]
+    
+    REPORTING_BENEFIT --> TEAM_LEAD_ACTION["👥 TEAM LEAD MORNING REVIEW (8:00 AM)<br/>Opens Dashboard with 24-Hour Summary:<br/>• How many plans logged yesterday<br/>• Which affordability checks failed<br/>• Exactly which cases were abandoned<br/>→ Immediate action on Silent Abandonments<br/>→ Gareth's team knows Phase 1<br/>   is working (or not) TODAY<br/>SYSTEM: Portal Analytics Dashboard"]
+    
+    TEAM_LEAD_ACTION --> REPORT_END(["📈 DAILY OPERATIONAL HEALTH<br/>Confirmed: Phase 1 Delivering<br/>Ready for Next Day"])
+    
+    style TRIGGER fill:#e3f2fd,stroke:#1976d2,stroke-width:2px,color:#000
+    style MFA fill:#fff3e0,stroke:#f57c00,stroke-width:2px,color:#000
+    style MFA_RESULT fill:#fff3e0,stroke:#f57c00,stroke-width:2px,color:#000
+    style MFA_FAIL_COUNT fill:#ffccbc,stroke:#d84315,stroke-width:2px,color:#000
+    style MFA_RETRY fill:#ffccbc,stroke:#d84315,stroke-width:2px,color:#000
+    style DASHBOARD fill:#e8f5e9,stroke:#388e3c,stroke-width:2px,color:#000
+    style ESCALATE_MFA fill:#ffebee,stroke:#c62828,stroke-width:2px,color:#000
+    style MFA_FOLLOWUP fill:#ffccbc,stroke:#d84315,stroke-width:2px,color:#000
+    style MFA_VERIFIED fill:#ff6f00,stroke:#bf360c,stroke-width:2px,color:#fff
+    style CASE_CLOSED_FAILED fill:#b71c1c,stroke:#000,stroke-width:2px,color:#fff
+    
+    style DASHBOARD_BENEFIT fill:#bbdefb,stroke:#1976d2,stroke-width:2px,color:#000
+    style SS_PLAN_PASS_BENEFIT fill:#bbdefb,stroke:#1976d2,stroke-width:2px,color:#000
+    style ESC_CONTEXT fill:#bbdefb,stroke:#1976d2,stroke-width:2px,color:#000
+    style SCHEDULE_BENEFIT fill:#bbdefb,stroke:#1976d2,stroke-width:2px,color:#000
+    style MISSED_BENEFIT fill:#bbdefb,stroke:#1976d2,stroke-width:2px,color:#000
+    style REPORTING_BENEFIT fill:#bbdefb,stroke:#1976d2,stroke-width:2px,color:#000
+    
+    style SELF_SERVICE fill:#e8f5e9,stroke:#388e3c,stroke-width:3px,color:#000
+    style ESCALATION fill:#fff3e0,stroke:#f57c00,stroke-width:3px,color:#000
+    style PAYMENT_HANDLING fill:#f3e5f5,stroke:#7b1fa2,stroke-width:3px,color:#000
+    
+    style SS_VIEW fill:#a5d6a7,stroke:#2e7d32,stroke-width:2px,color:#000
+    style SS_PTP fill:#a5d6a7,stroke:#2e7d32,stroke-width:2px,color:#000
+    style SS_INCOME_CHECK fill:#66bb6a,stroke:#00695c,stroke-width:2px,color:#fff
+    style SS_TIMEOUT fill:#ffccbc,stroke:#d84315,stroke-width:2px,color:#000
+    style SS_PLAN_CHECK fill:#a5d6a7,stroke:#2e7d32,stroke-width:2px,color:#000
+    style SS_PLAN_PASS fill:#a5d6a7,stroke:#2e7d32,stroke-width:2px,color:#000
+    style SS_PLAN_FAIL fill:#ff6f00,stroke:#bf360c,stroke-width:2px,color:#fff
+    style SS_PLAN_FAIL_ESCALATE fill:#ff6f00,stroke:#bf360c,stroke-width:2px,color:#fff
+    style ABANDON_TIMEOUT fill:#b71c1c,stroke:#000,stroke-width:2px,color:#fff
+    style SS_END_VIEW fill:#81c784,stroke:#1b5e20,stroke-width:2px,color:#fff
+    style SS_END_PTP fill:#81c784,stroke:#1b5e20,stroke-width:2px,color:#fff
+    style SS_CONSENT fill:#a5d6a7,stroke:#2e7d32,stroke-width:2px,color:#000
+    
+    style VIS_02 fill:#a5d6a7,stroke:#2e7d32,stroke-width:2px,color:#000
+    style VIS_02_END fill:#81c784,stroke:#1b5e20,stroke-width:2px,color:#fff
+    style HISTORY_END fill:#81c784,stroke:#1b5e20,stroke-width:2px,color:#fff
+    
+    style ESC_ASSIGN fill:#ffcc80,stroke:#e65100,stroke-width:2px,color:#000
+    style ESC_AGENT fill:#ffcc80,stroke:#e65100,stroke-width:2px,color:#000
+    style ESC_RESOLUTION fill:#ffcc80,stroke:#e65100,stroke-width:2px,color:#000
+    style ESC_PTP fill:#ffcc80,stroke:#e65100,stroke-width:2px,color:#000
+    style ESC_DEFER fill:#ffcc80,stroke:#e65100,stroke-width:2px,color:#000
+    style ESC_FLAG fill:#ffcc80,stroke:#e65100,stroke-width:2px,color:#000
+    style ESC_END fill:#ffb74d,stroke:#bf360c,stroke-width:2px,color:#fff
+    style ESC_HARDSHIP fill:#ff6f00,stroke:#bf360c,stroke-width:2px,color:#fff
+    style ESC_REASON fill:#fff3e0,stroke:#f57c00,stroke-width:2px,color:#000
+    
+    style AUTO_WORKFLOW fill:#81c784,stroke:#1b5e20,stroke-width:2px,color:#fff
+    style AUTO_SCHEDULE fill:#81c784,stroke:#1b5e20,stroke-width:2px,color:#fff
+    
+    style PAY_YES fill:#a5d6a7,stroke:#2e7d32,stroke-width:2px,color:#000
+    style PAY_YES_FULL fill:#66bb6a,stroke:#00695c,stroke-width:2px,color:#fff
+    style PAY_YES_PARTIAL fill:#ffccbc,stroke:#d84315,stroke-width:2px,color:#000
+    style PAY_MISSED fill:#ef9a9a,stroke:#b71c1c,stroke-width:2px,color:#000
+    style PAY_MISSED_AGENT fill:#ef9a9a,stroke:#b71c1c,stroke-width:2px,color:#fff
+    style PAY_MISSED_CUST fill:#ef9a9a,stroke:#b71c1c,stroke-width:2px,color:#fff
+    style AGENT_FOLLOWUP fill:#ffcc80,stroke:#e65100,stroke-width:2px,color:#000
+    style ESCALATE_SPECIALIST fill:#ffccbc,stroke:#d84315,stroke-width:2px,color:#000
+    style ESCALATE_COLLECTIONS fill:#ff6f00,stroke:#bf360c,stroke-width:2px,color:#fff
+    style COLLECTIONS_END fill:#ff8f00,stroke:#bf360c,stroke-width:2px,color:#fff
+    style SPECIALIST_END fill:#ffb74d,stroke:#bf360c,stroke-width:2px,color:#fff
+    
+    style MON_TRIGGER fill:#eceff1,stroke:#455a64,stroke-width:2px,color:#000
+    style MON_CHECK fill:#cfd8dc,stroke:#37474f,stroke-width:2px,color:#000
+    style MON_STUCK_TYPES fill:#ffebee,stroke:#c62828,stroke-width:2px,color:#000
+    style MON_EXTRACT fill:#fff9c4,stroke:#f57f17,stroke-width:2px,color:#000
+    style MON_QUEUE fill:#fff9c4,stroke:#f57f17,stroke-width:2px,color:#000
+    style MON_NO_ACTION fill:#c8e6c9,stroke:#1b5e20,stroke-width:2px,color:#000
+    style STUCK_CONTEXT fill:#bbdefb,stroke:#1976d2,stroke-width:2px,color:#000
+    style STUCK_ESCALATE fill:#ffccbc,stroke:#d84315,stroke-width:2px,color:#000
+    style DORMANT_MONITOR fill:#f5f5f5,stroke:#424242,stroke-width:2px,color:#000
+    
+    style REP_01 fill:#ce93d8,stroke:#6a1b9a,stroke-width:2px,color:#000
+    style REP_02 fill:#ce93d8,stroke:#6a1b9a,stroke-width:2px,color:#000
+    style REP_04 fill:#ce93d8,stroke:#6a1b9a,stroke-width:2px,color:#000
+    style BATCH_TIMING fill:#fff9c4,stroke:#f57f17,stroke-width:2px,color:#000
+    
+    style AUTO_REPORTING fill:#b39ddb,stroke:#4527a0,stroke-width:2px,color:#000
+    style REPORTING_BENEFIT fill:#9575cd,stroke:#283593,stroke-width:2px,color:#fff
+    style TEAM_LEAD_ACTION fill:#66bb6a,stroke:#00695c,stroke-width:2px,color:#fff
+    style REPORT_END fill:#7e57c2,stroke:#1a237e,stroke-width:2px,color:#fff
