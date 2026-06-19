@@ -1,0 +1,1369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart-Recovery Portal Prototype</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+
+        .header {
+            background-color: #4a4a4a;
+            color: white;
+            padding: 20px 40px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo-placeholder {
+            background-color: transparent;
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            color: #666;
+            font-weight: bold;
+        }
+
+        .header-title {
+            font-size: 28px;
+            font-weight: normal;
+        }
+
+        .header-nav {
+            display: flex;
+            gap: 30px;
+            align-items: center;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+            color: white;
+            text-decoration: none;
+            font-size: 13px;
+        }
+
+        .icon-placeholder {
+            width: 40px;
+            height: 40px;
+            background-color: transparent;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            position: relative;
+        }
+
+        /* Contact Tooltip */
+        .contact-tooltip {
+            display: none;
+            position: absolute;
+            bottom: -120px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #333;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 4px;
+            font-size: 12px;
+            white-space: nowrap;
+            z-index: 1000;
+            pointer-events: none;
+            line-height: 1.5;
+        }
+
+        .contact-tooltip.active {
+            display: block;
+        }
+
+        .contact-tooltip::before {
+            content: '';
+            position: absolute;
+            top: -5px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 5px solid transparent;
+            border-right: 5px solid transparent;
+            border-bottom: 5px solid #333;
+        }
+
+        .subheader {
+            background-color: #b0b0b0;
+            padding: 15px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 40px auto;
+            display: grid;
+            grid-template-columns: 1fr 4fr;
+            gap: 20px;
+            padding: 0 20px;
+        }
+
+        .sidebar {
+            display: none;
+        }
+
+        .sidebar.active {
+            display: block;
+        }
+
+        .sidebar-menu {
+            background-color: white;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .sidebar-item {
+            padding: 15px;
+            border-bottom: 1px solid #e0e0e0;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .sidebar-item:hover {
+            background-color: #f9f9f9;
+        }
+
+        .main-content {
+            background-color: white;
+            border-radius: 4px;
+            padding: 40px;
+            min-height: 600px;
+        }
+
+        .screen {
+            display: none;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        /* Landing Page */
+        .landing-page {
+            text-align: center;
+            padding: 60px 40px;
+        }
+
+        .landing-page h1 {
+            font-size: 36px;
+            margin-bottom: 20px;
+        }
+
+        .landing-page p {
+            font-size: 18px;
+            color: #666;
+            margin-bottom: 40px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .cta-button {
+            background-color: #1e88e5;
+            color: white;
+            padding: 15px 40px;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .cta-button:hover {
+            background-color: #1565c0;
+        }
+
+        .cta-button:disabled {
+            background-color: #b0bec5;
+            cursor: not-allowed;
+        }
+
+        /* Forms */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .form-group input[type="text"],
+        .form-group input[type="email"],
+        .form-group input[type="password"] {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #1e88e5;
+            box-shadow: 0 0 0 3px rgba(30, 136, 229, 0.1);
+        }
+
+        .form-group small {
+            display: block;
+            margin-top: 5px;
+            color: #999;
+            font-size: 12px;
+        }
+
+        /* Error/Warning Messages */
+        .alert {
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+            display: none;
+        }
+
+        .alert.active {
+            display: block;
+        }
+
+        .alert-warning {
+            background-color: #fff3cd;
+            border: 1px solid #ffc107;
+            color: #856404;
+        }
+
+        .alert-danger {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+
+        .alert-success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+
+        .alert-info {
+            background-color: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+
+        /* Lockout Warning */
+        .lockout-warning {
+            display: flex;
+            gap: 15px;
+            align-items: flex-start;
+        }
+
+        .lockout-icon {
+            width: 40px;
+            height: 40px;
+            background-color: #dc3545;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+
+        /* Account Summary */
+        .account-card {
+            background-color: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            padding: 30px;
+            margin-bottom: 20px;
+        }
+
+        .account-status {
+            font-size: 18px;
+            color: #666;
+            margin-bottom: 15px;
+        }
+
+        .balance-section {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .balance-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            font-size: 14px;
+        }
+
+        .balance-item.total {
+            font-weight: bold;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+
+        .balance-amount {
+            font-weight: bold;
+        }
+
+        /* Action Cards */
+        .action-cards {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .action-card {
+            background-color: #f5f5f5;
+            border: 2px solid #e0e0e0;
+            border-radius: 4px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .action-card:hover {
+            border-color: #1e88e5;
+            background-color: #f0f7ff;
+        }
+
+        .action-card p {
+            font-size: 16px;
+            margin: 0;
+        }
+
+        /* Promise-to-Pay */
+        .ptp-section {
+            background-color: #f9f9f9;
+            padding: 20px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+
+        .ptp-payment {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            background-color: white;
+            border-radius: 4px;
+            margin-bottom: 10px;
+        }
+
+        .affordability-section {
+            background-color: white;
+            border: 1px solid #e0e0e0;
+            padding: 20px;
+            border-radius: 4px;
+            margin-top: 20px;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .checkbox-group label {
+            margin: 0;
+            cursor: pointer;
+            font-weight: normal;
+        }
+
+        /* Confirmation */
+        .confirmation-icon {
+            font-size: 48px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .confirmation-message {
+            text-align: center;
+            font-size: 24px;
+            font-weight: 500;
+            margin-bottom: 30px;
+        }
+
+        .summary-box {
+            background-color: #f5f5f5;
+            padding: 20px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+
+        .summary-header {
+            background-color: #808080;
+            color: white;
+            padding: 10px;
+            border-radius: 4px 4px 0 0;
+            font-weight: 500;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .summary-content {
+            background-color: #d0d0d0;
+            padding: 15px;
+            border-radius: 0 0 4px 4px;
+        }
+
+        /* Routed-to-Agent */
+        .escalation-container {
+            background-color: #f9f9f9;
+            padding: 40px;
+            border-radius: 4px;
+            text-align: center;
+        }
+
+        .escalation-message {
+            font-size: 18px;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+
+        .escalation-details {
+            background-color: white;
+            border-left: 4px solid #ff9800;
+            padding: 20px;
+            text-align: left;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+
+        .escalation-detail {
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .escalation-detail strong {
+            display: block;
+            margin-bottom: 3px;
+            color: #666;
+        }
+
+        .escalation-detail .value {
+            font-size: 16px;
+            color: #1e88e5;
+        }
+
+        .reason-badge {
+            display: inline-block;
+            background-color: #ff9800;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 4px;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        /* MFA Input */
+        .mfa-input {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .mfa-digit {
+            width: 50px;
+            height: 50px;
+            font-size: 24px;
+            text-align: center;
+            border: 2px solid #ccc;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+
+        .mfa-digit:focus {
+            outline: none;
+            border-color: #1e88e5;
+            box-shadow: 0 0 0 3px rgba(30, 136, 229, 0.1);
+        }
+
+        /* Helper Links */
+        .link {
+            color: #1e88e5;
+            text-decoration: underline;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .link:hover {
+            color: #1565c0;
+        }
+
+        /* Button Group */
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .button-group button {
+            flex: 1;
+        }
+
+        .secondary-button {
+            background-color: white;
+            color: #333;
+            border: 1px solid #ccc;
+        }
+
+        .secondary-button:hover {
+            background-color: #f5f5f5;
+        }
+
+        /* Menu Icon */
+        .menu-icon {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            cursor: pointer;
+        }
+
+        .menu-line {
+            width: 24px;
+            height: 3px;
+            background-color: #333;
+        }
+
+        /* Greeting */
+        .greeting {
+            font-size: 20px;
+            margin-bottom: 20px;
+        }
+
+        /* Step Indicator */
+        .step-indicator {
+            font-size: 14px;
+            color: #999;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="header-left">
+            <div class="logo-placeholder">
+                <svg width="60" height="60" viewBox="0 0 60 60" style="display: block;">
+                    <!-- Bank Shield Logo -->
+                    <defs>
+                        <linearGradient id="bankGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" style="stop-color:#1e88e5;stop-opacity:1" />
+                            <stop offset="100%" style="stop-color:#1565c0;stop-opacity:1" />
+                        </linearGradient>
+                    </defs>
+                    <!-- Shield (Symmetrical) -->
+                    <path d="M 30 8 L 48 18 L 48 32 Q 39 45 30 50 Q 21 45 12 32 L 12 18 Z" fill="url(#bankGradient)" stroke="white" stroke-width="2"/>
+                    <!-- Building columns on shield -->
+                    <rect x="21" y="22" width="4" height="20" fill="white"/>
+                    <rect x="35" y="22" width="4" height="20" fill="white"/>
+                    <circle cx="23" cy="28" r="1.5" fill="#1e88e5"/>
+                    <circle cx="23" cy="33" r="1.5" fill="#1e88e5"/>
+                    <circle cx="23" cy="38" r="1.5" fill="#1e88e5"/>
+                    <circle cx="37" cy="28" r="1.5" fill="#1e88e5"/>
+                    <circle cx="37" cy="33" r="1.5" fill="#1e88e5"/>
+                    <circle cx="37" cy="38" r="1.5" fill="#1e88e5"/>
+                </svg>
+            </div>
+            <div class="header-title">Legacy Trust</div>
+        </div>
+        <div class="header-nav">
+            <a class="nav-item" href="javascript:void(0)" onclick="alert('Speak with an agent on 020 0000 2222\\n\\nOpening hours:\\nMon-Fri: 9am-5pm\\nSat: 10am-4pm\\nSun: Closed')" onmouseenter="document.getElementById('contactTooltip1').classList.add('active')" onmouseleave="document.getElementById('contactTooltip1').classList.remove('active')">
+                <div class="icon-placeholder" style="font-size: 24px; filter: brightness(0) invert(1);">
+                    📞
+                </div>
+                <span>Contact</span>
+                <div class="contact-tooltip" id="contactTooltip1">
+                    <div><strong>020 0000 2222</strong></div>
+                    <div>Mon-Fri: 9am-5pm</div>
+                    <div>Sat: 10am-4pm</div>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    <!-- Subheader (Dynamic) -->
+    <div class="subheader" id="subheader" style="display: none; justify-content: flex-start; gap: 20px;">
+        <a class="nav-item" href="javascript:void(0)" onclick="document.getElementById('sidebar').classList.toggle('active')" style="margin: 0;">
+            <div class="icon-placeholder">
+                <svg width="40" height="40" viewBox="0 0 40 40" style="display: block;">
+                    <!-- Hamburger menu -->
+                    <line x1="8" y1="12" x2="32" y2="12" stroke="white" stroke-width="2" stroke-linecap="round"/>
+                    <line x1="8" y1="20" x2="32" y2="20" stroke="white" stroke-width="2" stroke-linecap="round"/>
+                    <line x1="8" y1="28" x2="32" y2="28" stroke="white" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+            </div>
+        </a>
+        <div id="subheader-text"></div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="container" id="mainContainer">
+        <!-- Sidebar -->
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-menu">
+                <div class="sidebar-item" onclick="goToScreen('screen-dashboard');">Account summary</div>
+                <div class="sidebar-item">Payment history</div>
+                <div class="sidebar-item">Payment journey plan</div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content" id="mainContent">
+            <!-- Screen 1: Landing Page -->
+            <div id="screen-landing" class="screen active">
+                <div class="landing-page">
+                    <h1>Resolve Your Account Today</h1>
+                    <p>Welcome to the Smart-Recovery Portal. Get your account back on track with quick, secure, and simple payment arrangements.</p>
+                    <button class="cta-button" onclick="goToScreen('screen-login')">Log In to Smart-Recovery</button>
+                </div>
+            </div>
+
+            <!-- Screen 2: Login (IDV Step 1) -->
+            <div id="screen-login" class="screen">
+                <div class="step-indicator">Log in to Smart-Recovery - Step 1 of 2</div>
+                
+                <div class="alert alert-warning" id="loginAttemptAlert"></div>
+                <div class="alert alert-danger" id="loginErrorAlert"></div>
+                
+                <div style="max-width: 450px;">
+                    <h3 style="margin-bottom: 20px; border-bottom: 2px solid #333; padding-bottom: 10px;">Let us know who you are</h3>
+                    
+                    <div class="form-group">
+                        <label for="personalId">Personal ID</label>
+                        <input type="text" id="personalId" placeholder="">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="securityNumber">Security number</label>
+                        <small>You may know this as your Customer PIN</small>
+                        <input type="text" id="securityNumber" placeholder="">
+                    </div>
+                    
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="rememberMe">
+                        <label for="rememberMe">Remember me (Do not select for shared computers)</label>
+                    </div>
+                    
+                    <div style="margin-bottom: 20px;">
+                        <span class="link">Forgotten details?</span>
+                    </div>
+                    
+                    <button class="cta-button" style="width: 100%;" onclick="validateLogin()">Continue</button>
+                </div>
+            </div>
+
+            <!-- Screen 3: MFA (IDV Step 2) -->
+            <div id="screen-mfa" class="screen">
+                <div class="step-indicator">Log in to Smart-Recovery - Step 2 of 2</div>
+                
+                <div class="alert alert-warning" id="mfaAttemptAlert"></div>
+                <div class="alert alert-danger" id="mfaErrorAlert"></div>
+                <div class="alert alert-danger" id="mfaLockedAlert"></div>
+                
+                <div style="max-width: 450px;">
+                    <h3 style="margin-bottom: 20px; border-bottom: 2px solid #333; padding-bottom: 10px;">Authentication</h3>
+                    
+                    <div class="form-group">
+                        <label>SMS Code</label>
+                        <p style="font-size: 14px; color: #666; margin-bottom: 10px;">Use the Send code button to send a One Time Passcode (OTP) to the mobile number you registered to your account. If your mobile number has changed you will need to contact us.</p>
+                        <div style="background-color: #f5f5f5; padding: 10px; border-radius: 4px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
+                            <span id="phoneDisplay">*******920</span>
+                            <button id="sendCodeBtn" class="secondary-button" style="width: auto; padding: 8px 15px;" onclick="handleSendMFA()">Send code</button>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="mfaCode">Enter your 6 digit code</label>
+                        <input type="text" id="mfaCode" maxlength="6" placeholder="" style="font-size: 18px; letter-spacing: 5px;">
+                    </div>
+                    
+                    <div style="margin-bottom: 20px;">
+                        <span class="link">SMS text not recieved? Resend.</span>
+                    </div>
+                    
+                    <div class="button-group">
+                        <button class="cta-button" onclick="validateMFA()">Submit</button>
+                        <button class="secondary-button" onclick="goToScreen('screen-login')">Return</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Screen 4: Account Summary Dashboard -->
+            <div id="screen-dashboard" class="screen">
+                <div class="greeting" id="customerGreeting">Hello Priya</div>
+                
+                <div class="account-card">
+                    <div class="account-status">Delinquent Account</div>
+                    <div style="font-size: 14px; color: #666;">
+                        <div>Account ID: 00-00-00</div>
+                        <div>Reference: 12345678</div>
+                    </div>
+                    
+                    <div style="margin-top: 20px; font-size: 32px; font-weight: bold;">
+                        £327.24
+                    </div>
+                    <div style="font-size: 14px; color: #666;">Total Outstanding Amount</div>
+                    
+                    <div class="balance-section">
+                        <div class="balance-item">
+                            <span>Principal debt:</span>
+                            <span class="balance-amount">£300.00</span>
+                        </div>
+                        <div class="balance-item">
+                            <span>Frozen fees:</span>
+                            <span class="balance-amount">£27.25</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <button class="cta-button" style="width: 100%;" onclick="goToScreen('screen-action-choice')">Choose Payment Option</button>
+            </div>
+
+            <!-- Screen 5: Choose Next Action -->
+            <div id="screen-action-choice" class="screen">
+                <div class="greeting" id="customerGreeting2">Hello Priya</div>
+                
+                <h2 style="margin-bottom: 30px;">Payment options</h2>
+                
+                <div class="action-cards">
+                    <div class="action-card" onclick="appState.paymentType = 'full'; goToScreen('screen-ptp');">
+                        <p>Pay in full</p>
+                    </div>
+                    <div class="action-card" onclick="appState.paymentType = 'installments'; goToScreen('screen-ptp');">
+                        <p>Pay in installments</p>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 20px;">
+                    <p style="margin-bottom: 10px;">Need support?</p>
+                    <span class="link" onclick="goToHardship()">I am experiencing financial hardship or need extra support.</span>
+                </div>
+            </div>
+
+            <!-- Screen 6: Promise-to-Pay -->
+            <div id="screen-ptp" class="screen">
+                <h2 id="ptpTitle" style="margin-bottom: 20px;">Promise to pay - monthly installments</h2>
+                
+                <div class="ptp-section">
+                    <div id="paymentDateSection" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                        <strong id="paymentDateLabel">Select first payment date</strong>
+                        <span style="background-color: #666; color: white; padding: 5px 10px; border-radius: 3px; display: flex; align-items: center; justify-content: center; cursor: pointer;" onclick="toggleCalendarPicker();">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                <line x1="16" y1="2" x2="16" y2="6"></line>
+                                <line x1="8" y1="2" x2="8" y2="6"></line>
+                                <line x1="3" y1="10" x2="21" y2="10"></line>
+                            </svg>
+                        </span>
+                    </div>
+                    
+                    <div id="paymentBoxes" style="display: flex; flex-direction: column; gap: 8px;">
+                        <div class="ptp-payment">
+                            <span>Payment 1 - 18/06/26</span>
+                            <span>£109.08</span>
+                        </div>
+                        <div class="ptp-payment">
+                            <span>Payment 2 - 18/07/26</span>
+                            <span>£109.08</span>
+                        </div>
+                        <div class="ptp-payment">
+                            <span>Payment 3 - 18/08/26</span>
+                            <span>£109.08</span>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #ddd;">
+                        <strong>Total overdue amount: £327.24</strong>
+                    </div>
+                </div>
+                
+                <div class="affordability-section">
+                    <p id="affordabilityPrompt" style="margin-bottom: 20px;">Please confirm your monthly net income covers these installments</p>
+                    
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="affordabilityConfirm" onchange="updateAffordabilityButton()">
+                        <label id="affordabilityLabel" for="affordabilityConfirm">I confirm I can afford these monthly payments</label>
+                    </div>
+                    
+                    <div style="text-align: right;">
+                        <button class="cta-button" id="confirmPlanBtn" onclick="confirmPlan()" style="width: auto; padding: 10px 30px;">Confirm Plan</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Screen 7: Confirmation -->
+            <div id="screen-confirmation" class="screen">
+                <div class="greeting" id="customerGreeting3">Promise to pay</div>
+                
+                <div class="confirmation-icon">✓</div>
+                <div class="confirmation-message">Successfully created payment plan</div>
+                
+                <div class="summary-box">
+                    <div class="summary-header">
+                        <span>Summary</span>
+                        <div style="display: flex; gap: 15px; font-size: 12px;">
+                            <span style="display: flex; align-items: center; gap: 5px; cursor: pointer;">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="6 9 6 2 18 2 18 9"></polyline>
+                                    <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+                                    <rect x="6" y="14" width="12" height="8"></rect>
+                                </svg>
+                                Print
+                            </span>
+                            <span style="display: flex; align-items: center; gap: 5px; cursor: pointer;">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                    <polyline points="7 10 12 15 17 10"></polyline>
+                                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                                </svg>
+                                Download
+                            </span>
+                        </div>
+                    </div>
+                    <div class="summary-content">
+                        <div id="confirmPaymentBoxes" style="display: flex; flex-direction: column; gap: 10px;">
+                            <div style="margin-bottom: 10px;">Payment 1 - 18/06/26: £109.08</div>
+                            <div style="margin-bottom: 10px;">Payment 2 - 18/07/26: £109.08</div>
+                            <div style="margin-bottom: 10px;">Payment 3 - 18/08/26: £109.08</div>
+                        </div>
+                        <div id="payOnSection" style="margin-top: 15px; padding-top: 15px; display: none;">
+                            <strong id="payOnText">Pay on: 18/06/26</strong>
+                        </div>
+                        <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #999;">
+                            <strong>Total overdue amount: £327.24</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Calendar Picker Popup Modal -->
+            <div id="calendarPickerModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+                <div style="background-color: white; border-radius: 8px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); width: 320px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <button onclick="previousMonth()" style="background: #1e88e5; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer;">←</button>
+                        <h3 id="calendarMonthYear" style="margin: 0; font-size: 16px; color: #333;">June 2026</h3>
+                        <button onclick="nextMonth()" style="background: #1e88e5; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer;">→</button>
+                    </div>
+                    <div id="calendarGrid" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; margin-bottom: 15px;">
+                    </div>
+                    <div style="text-align: right;">
+                        <button onclick="toggleCalendarPicker()" style="background: #999; color: white; border: none; padding: 8px 20px; border-radius: 3px; cursor: pointer;">Close</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Screen 8: Routed-to-Agent (Exception) -->
+            <div id="screen-escalation" class="screen">
+                <div class="greeting">Routed-to-Agent</div>
+                
+                <div class="escalation-container">
+                    <div class="escalation-message">
+                        Thank you. Your account has been securely escalated to our specialist customer care team.
+                    </div>
+                    
+                    <div class="escalation-details">
+                        <div class="escalation-detail">
+                            <strong>Reference number:</strong>
+                            <div class="value">#2341234</div>
+                        </div>
+                        <div class="escalation-detail">
+                            <strong>Get in contact:</strong>
+                            <div class="value">020 0000 2222</div>
+                        </div>
+                    </div>
+                    
+                    <div id="escalationReason"></div>
+                </div>
+            </div>
+
+            <!-- Screen 9: Account Locked -->
+            <div id="screen-locked" class="screen">
+                <div class="step-indicator">Log in to Smart-Recovery - Step 1 of 2</div>
+                
+                <div style="max-width: 450px;">
+                    <div class="alert alert-danger active" style="display: block;">
+                        <div class="lockout-warning">
+                            <div class="lockout-icon">⚠</div>
+                            <div>
+                                <strong>Your account has been locked for security reasons</strong>
+                                <p style="margin-top: 5px; font-size: 14px;">Following 3 failed sign in attempts, your account is now locked for 24 hours. A notification has been sent to our collections team who will reach out to you shortly.</p>
+                                <p style="margin-top: 10px; font-size: 14px;"><strong>Need help? Contact: 020 0000 2222</strong></p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <h3 style="margin: 30px 0 20px 0; border-bottom: 2px solid #333; padding-bottom: 10px;">Let us know who you are</h3>
+                    
+                    <div class="form-group">
+                        <label for="personalId2">Personal ID</label>
+                        <input type="text" id="personalId2" placeholder="" disabled>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="securityNumber2">Security number</label>
+                        <input type="text" id="securityNumber2" placeholder="" disabled>
+                    </div>
+                    
+                    <button class="cta-button" style="width: 100%; opacity: 0.5;" disabled>Continue</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Application State
+        const appState = {
+            currentCustomer: {
+                name: 'Priya',
+                personalId: 'priya_banking',
+                securityNumber: '12345',
+                phoneNumber: '*******920',
+                balance: 327.24,
+                principalDebt: 300.00,
+                frozenFees: 27.25
+            },
+            loginAttempts: 0,
+            mfaAttempts: 0,
+            mfaAttempted: false,
+            isLocked: false,
+            escalationReason: null,
+            paymentType: 'installments',  // 'full' or 'installments'
+            paymentDates: {
+                payment1: '18/06/26',
+                payment2: '18/07/26',
+                payment3: '18/08/26'
+            }
+        };
+
+        // Navigation Functions
+        function goToScreen(screenId) {
+            // Hide all screens
+            document.querySelectorAll('.screen').forEach(screen => {
+                screen.classList.remove('active');
+            });
+            
+            // Show target screen
+            document.getElementById(screenId).classList.add('active');
+            
+            // Update subheader and sidebar
+            updateLayout(screenId);
+            
+            // Reset alerts
+            resetAlerts();
+            
+            // Scroll to top
+            window.scrollTo(0, 0);
+        }
+
+        function updateLayout(screenId) {
+            const subheader = document.getElementById('subheader');
+            const sidebar = document.getElementById('sidebar');
+            const mainContent = document.getElementById('mainContent');
+            
+            // Screens that show sidebar
+            const sidebarScreens = ['screen-dashboard', 'screen-action-choice', 'screen-ptp', 'screen-confirmation', 'screen-escalation'];
+            
+            if (sidebarScreens.includes(screenId)) {
+                sidebar.classList.add('active');
+                mainContent.style.gridColumn = 'auto';
+                subheader.style.display = 'flex';
+                
+                if (screenId === 'screen-dashboard') {
+                    document.getElementById('subheader-text').textContent = 'Hello ' + appState.currentCustomer.name;
+                } else if (screenId === 'screen-action-choice') {
+                    document.getElementById('subheader-text').textContent = 'Hello ' + appState.currentCustomer.name;
+                } else if (screenId === 'screen-ptp') {
+                    // Update PTP screen based on payment type
+                    if (appState.paymentType === 'full') {
+                        document.getElementById('ptpTitle').textContent = 'Promise to pay - pay in full';
+                        document.getElementById('paymentDateLabel').textContent = 'Select payment date';
+                        document.getElementById('paymentBoxes').style.display = 'none';
+                        document.getElementById('subheader-text').textContent = 'Promise to pay - pay in full';
+                        document.getElementById('affordabilityPrompt').textContent = 'Please confirm you are able to make this payment';
+                        document.getElementById('affordabilityLabel').textContent = 'I confirm I can afford this payment';
+                    } else {
+                        document.getElementById('ptpTitle').textContent = 'Promise to pay - monthly installments';
+                        document.getElementById('paymentDateLabel').textContent = 'Select first payment date';
+                        document.getElementById('paymentBoxes').style.display = 'flex';
+                        document.getElementById('subheader-text').textContent = 'Promise to pay - monthly installments';
+                        document.getElementById('affordabilityPrompt').textContent = 'Please confirm your monthly net income covers these installments';
+                        document.getElementById('affordabilityLabel').textContent = 'I confirm I can afford these monthly payments';
+                    }
+                } else if (screenId === 'screen-confirmation') {
+                    document.getElementById('subheader-text').textContent = 'Promise to pay';
+                    // Hide payment boxes if paying in full
+                    if (appState.paymentType === 'full') {
+                        document.getElementById('confirmPaymentBoxes').style.display = 'none';
+                        // Show pay on date for full payments
+                        document.getElementById('payOnSection').style.display = 'block';
+                        document.getElementById('payOnText').textContent = 'Pay on: ' + appState.paymentDates.payment1;
+                    } else {
+                        document.getElementById('confirmPaymentBoxes').style.display = 'flex';
+                        document.getElementById('payOnSection').style.display = 'none';
+                        // Update confirmation screen with stored payment dates
+                        document.getElementById('confirmPaymentBoxes').innerHTML = `
+                            <div style="margin-bottom: 10px;">Payment 1 - ${appState.paymentDates.payment1}: £109.08</div>
+                            <div style="margin-bottom: 10px;">Payment 2 - ${appState.paymentDates.payment2}: £109.08</div>
+                            <div style="margin-bottom: 10px;">Payment 3 - ${appState.paymentDates.payment3}: £109.08</div>
+                        `;
+                    }
+                } else if (screenId === 'screen-escalation') {
+                    document.getElementById('subheader-text').textContent = 'Routed-to-Agent';
+                }
+            } else {
+                sidebar.classList.remove('active');
+                mainContent.style.gridColumn = '1 / -1';
+                subheader.style.display = 'none';
+            }
+        }
+
+        // Login Validation
+        function validateLogin() {
+            const personalId = document.getElementById('personalId').value;
+            const securityNumber = document.getElementById('securityNumber').value;
+            const alert = document.getElementById('loginErrorAlert');
+            
+            if (personalId === appState.currentCustomer.personalId && 
+                securityNumber === appState.currentCustomer.securityNumber) {
+                appState.loginAttempts = 0;
+                appState.mfaAttempted = false;
+                goToScreen('screen-mfa');
+            } else {
+                appState.loginAttempts++;
+                const remaining = 3 - appState.loginAttempts;
+                
+                if (remaining === 0) {
+                    // Lock account
+                    appState.isLocked = true;
+                    triggerMFALockout();
+                    goToScreen('screen-locked');
+                } else {
+                    alert.textContent = `Your personal ID or Security number are incorrect. ${remaining} of 3 attempts remaining.`;
+                    alert.classList.add('active');
+                }
+            }
+        }
+
+        // MFA Functions
+        function handleSendMFA() {
+            const button = document.getElementById('sendCodeBtn');
+            button.textContent = 'Resend code';
+            sendMFA();
+        }
+
+        function sendMFA() {
+            appState.mfaAttempted = true;
+            alert('6-digit code sent to ' + appState.currentCustomer.phoneNumber);
+        }
+
+        function validateMFA() {
+            const code = document.getElementById('mfaCode').value;
+            const correctCode = '123456';
+            const alert = document.getElementById('mfaErrorAlert');
+            const attemptAlert = document.getElementById('mfaAttemptAlert');
+            const lockedAlert = document.getElementById('mfaLockedAlert');
+            
+            if (!appState.mfaAttempted) {
+                alert.textContent = 'Please send the code first.';
+                alert.classList.add('active');
+                return;
+            }
+            
+            if (code === correctCode) {
+                appState.mfaAttempts = 0;
+                goToScreen('screen-dashboard');
+            } else {
+                appState.mfaAttempts++;
+                const remaining = 3 - appState.mfaAttempts;
+                
+                if (remaining === 0) {
+                    appState.isLocked = true;
+                    triggerMFALockout();
+                    lockedAlert.innerHTML = '<strong>Your account has been locked for security reasons.</strong><p style="margin-top: 5px;">Following 3 failed sign in attempts, your account is now locked for 24 hours. A real-time notification email has been sent to collections_alerts@bank.com.</p><p style="margin-top: 10px;"><strong>Account ID:</strong> 00-00-00</p><p><strong>Lockout Reason:</strong> 3x MFA Failure</p>';
+                    lockedAlert.classList.add('active');
+                    goToScreen('screen-locked');
+                } else {
+                    attemptAlert.textContent = `Incorrect code. ${remaining} of 3 attempts remaining. Your session will lock after 3 incorrect attempts.`;
+                    attemptAlert.classList.add('active');
+                }
+            }
+        }
+
+        // MFA Lockout (Real-time Email Alert)
+        function triggerMFALockout() {
+            console.log('[SYSTEM] Real-time email alert triggered');
+            console.log({
+                to: 'collections_alerts@bank.com',
+                subject: 'Account Lockout Alert - IDV-03 Real-Time Notification',
+                body: {
+                    Account_ID: '00-00-00',
+                    Timestamp: new Date().toISOString(),
+                    Lockout_Reason: 'MFA 3x Failed Attempts',
+                    Customer_Name: appState.currentCustomer.name,
+                    Phone: appState.currentCustomer.phoneNumber
+                }
+            });
+        }
+
+        // Hardship Path
+        function goToHardship() {
+            appState.escalationReason = 'HARDSHIP_ABSOLUTE';
+            displayEscalationReason();
+            goToScreen('screen-escalation');
+        }
+
+        // Affordability Validation
+        function updateAffordabilityButton() {
+            const checkbox = document.getElementById('affordabilityConfirm');
+            const button = document.getElementById('confirmPlanBtn');
+            button.disabled = !checkbox.checked;
+        }
+
+        function confirmPlan() {
+            const checkbox = document.getElementById('affordabilityConfirm');
+            
+            if (!checkbox.checked) {
+                appState.escalationReason = 'AFFORDABILITY_FAILED';
+                displayEscalationReason();
+                goToScreen('screen-escalation');
+            } else {
+                goToScreen('screen-confirmation');
+            }
+        }
+
+        // Escalation Display
+        function displayEscalationReason() {
+            const reasonMap = {
+                'AFFORDABILITY_FAILED': 'Affordability Check Failed',
+                'HARDSHIP_ABSOLUTE': 'Customer Experiencing Financial Hardship',
+                'VULNERABILITY_FLAGGED': 'Vulnerable Customer Flagged'
+            };
+            
+            const reasonText = reasonMap[appState.escalationReason] || 'Account Review Required';
+            const reasonElement = document.getElementById('escalationReason');
+            reasonElement.innerHTML = `<div class="reason-badge">Reason: ${appState.escalationReason}</div><p style="margin-top: 15px; font-size: 14px; color: #666;">${reasonText}</p>`;
+        }
+
+        // Alert Reset
+        function resetAlerts() {
+            document.querySelectorAll('.alert').forEach(alert => {
+                alert.classList.remove('active');
+            });
+        }
+
+        // Initialize
+        window.addEventListener('load', () => {
+            goToScreen('screen-landing');
+        });
+
+        // Calendar Picker Functions
+        let calendarCurrentDate = new Date();
+        
+        function toggleCalendarPicker() {
+            const modal = document.getElementById('calendarPickerModal');
+            if (modal.style.display === 'none') {
+                modal.style.display = 'flex';
+                generateCalendar();
+            } else {
+                modal.style.display = 'none';
+            }
+        }
+        
+        function generateCalendar() {
+            const year = calendarCurrentDate.getFullYear();
+            const month = calendarCurrentDate.getMonth();
+            
+            // Update header
+            const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+            document.getElementById('calendarMonthYear').textContent = monthNames[month] + ' ' + year;
+            
+            // Get first day of month and number of days
+            const firstDay = new Date(year, month, 1).getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            
+            // Create calendar grid
+            const grid = document.getElementById('calendarGrid');
+            grid.innerHTML = '';
+            
+            // Day headers
+            const dayHeaders = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            dayHeaders.forEach(day => {
+                const dayHeader = document.createElement('div');
+                dayHeader.textContent = day;
+                dayHeader.style.fontWeight = 'bold';
+                dayHeader.style.textAlign = 'center';
+                dayHeader.style.color = '#666';
+                dayHeader.style.fontSize = '12px';
+                grid.appendChild(dayHeader);
+            });
+            
+            // Empty cells before first day
+            for (let i = 0; i < firstDay; i++) {
+                grid.appendChild(document.createElement('div'));
+            }
+            
+            // Days of month
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dayCell = document.createElement('div');
+                dayCell.textContent = day;
+                dayCell.style.textAlign = 'center';
+                dayCell.style.padding = '8px';
+                dayCell.style.borderRadius = '3px';
+                dayCell.style.color = '#333';
+                
+                // Calculate cutoff date based on payment type
+                const today = new Date();
+                const currentDate = new Date(year, month, day);
+                let cutoffDate;
+                
+                if (appState.paymentType === 'full') {
+                    // 2 weeks for pay in full
+                    cutoffDate = new Date(today);
+                    cutoffDate.setDate(cutoffDate.getDate() + 14);
+                } else {
+                    // 1 month for installments
+                    cutoffDate = new Date(today);
+                    cutoffDate.setDate(cutoffDate.getDate() + 30);
+                }
+                
+                // Check if date is selectable (not in past, not after cutoff)
+                const todayAtMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+                const isSelectable = currentDate >= todayAtMidnight && currentDate <= cutoffDate;
+                
+                // Highlight today
+                if (day === today.getDate() && month === today.getMonth() && year === today.getFullYear()) {
+                    dayCell.style.backgroundColor = '#1e88e5';
+                    dayCell.style.color = 'white';
+                    dayCell.style.fontWeight = 'bold';
+                    dayCell.style.cursor = 'pointer';
+                } else if (!isSelectable) {
+                    // Grey out dates past the cutoff
+                    dayCell.style.backgroundColor = '#f0f0f0';
+                    dayCell.style.color = '#ccc';
+                    dayCell.style.cursor = 'not-allowed';
+                } else {
+                    dayCell.style.cursor = 'pointer';
+                }
+                
+                dayCell.onmouseover = function() { 
+                    if (isSelectable && !(day === today.getDate() && month === today.getMonth() && year === today.getFullYear())) {
+                        this.style.backgroundColor = '#e0e0e0'; 
+                    }
+                }
+                dayCell.onmouseout = function() { 
+                    if (!(day === today.getDate() && month === today.getMonth() && year === today.getFullYear())) {
+                        if (isSelectable) {
+                            this.style.backgroundColor = 'transparent';
+                        } else {
+                            this.style.backgroundColor = '#f0f0f0';
+                        }
+                    }
+                }
+                
+                if (isSelectable) {
+                    dayCell.onclick = function() {
+                        const selectedDate = new Date(year, month, day);
+                        const formattedDate = selectedDate.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' });
+                        
+                        // Calculate Payment 2 and Payment 3 dates (1 month and 2 months after Payment 1)
+                        const payment2Date = new Date(year, month + 1, day);
+                        const payment3Date = new Date(year, month + 2, day);
+                        
+                        const formattedPayment2 = payment2Date.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' });
+                        const formattedPayment3 = payment3Date.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' });
+                        
+                        // Store dates in appState
+                        appState.paymentDates = {
+                            payment1: formattedDate,
+                            payment2: formattedPayment2,
+                            payment3: formattedPayment3
+                        };
+                        
+                        // Update payment boxes with new dates
+                        const paymentBoxes = document.getElementById('paymentBoxes');
+                        if (paymentBoxes) {
+                            paymentBoxes.innerHTML = `
+                                <div class="ptp-payment">
+                                    <span>Payment 1 - ${formattedDate}</span>
+                                    <span>£109.08</span>
+                                </div>
+                                <div class="ptp-payment">
+                                    <span>Payment 2 - ${formattedPayment2}</span>
+                                    <span>£109.08</span>
+                                </div>
+                                <div class="ptp-payment">
+                                    <span>Payment 3 - ${formattedPayment3}</span>
+                                    <span>£109.08</span>
+                                </div>
+                            `;
+                        }
+                        
+                        // Update the date label text
+                        const dateLabel = document.getElementById('paymentDateLabel');
+                        if (dateLabel) {
+                            dateLabel.textContent = formattedDate;
+                        }
+                        
+                        console.log('Selected Payment 1 date: ' + formattedDate);
+                        toggleCalendarPicker();
+                    };
+                }
+                
+                grid.appendChild(dayCell);
+            }
+        }
+        
+        function previousMonth() {
+            calendarCurrentDate.setMonth(calendarCurrentDate.getMonth() - 1);
+            generateCalendar();
+        }
+        
+        function nextMonth() {
+            calendarCurrentDate.setMonth(calendarCurrentDate.getMonth() + 1);
+            generateCalendar();
+        }
+    </script>
+</body>
+</html>
