@@ -1,3 +1,4 @@
+# Ranking priorities
 ## Tier 1: Foundational Security & Core Ingestion (Highest Priority)
 Stories Included: [IDV-01] (MFA Gate), [IDV-02] (3x Lockout), [REP-02] (Midnight SFTP Batch Export Script), [VIS-03] (Legacy Data Sync)
 Critical Dependencies: These stories have zero technical dependencies; they are the dependencies.
